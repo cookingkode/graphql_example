@@ -24,10 +24,10 @@ var (
 	delEmpStmt           *sql.Stmt
 )
 
-func init() {
+func dbInit(dbstring string) {
 	var err error
 
-	if db, err = sql.Open("mysql", "root@/company"); err != nil {
+	if db, err = sql.Open("mysql", dbstring); err != nil {
 		panic(err)
 	}
 
