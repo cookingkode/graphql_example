@@ -1,5 +1,32 @@
 # GraphQL based employee CRUD service example 
 
+## DB Schema
+
+* COMPANY DB EMPLOYEE TABLE
+```
++--------+---------------+------+-----+---------+----------------+
+| Field  | Type          | Null | Key | Default | Extra          |
++--------+---------------+------+-----+---------+----------------+
+| EMPNO  | int(11)       | NO   | PRI | NULL    | auto_increment |
+| ENAME  | varchar(100)  | YES  |     | NULL    |                |
+| JOB    | varchar(100)  | YES  |     | NULL    |                |
+| MGR    | int(11)       | YES  |     | NULL    |                |
+| SALARY | decimal(10,0) | YES  |     | NULL    |                |
+| DEPTNO | int(11)       | YES  |     | NULL    |                |
++--------+---------------+------+-----+---------+----------------+
+```
+
+* COMPANY DB DEPARTMENT TABLE
+```
++--------+--------------+------+-----+---------+-------+
+| Field  | Type         | Null | Key | Default | Extra |
++--------+--------------+------+-----+---------+-------+
+| DEPTNO | int(11)      | YES  |     | NULL    |       |
+| DNAME  | varchar(100) | YES  |     | NULL    |       |
+| LOC    | varchar(100) | YES  |     | NULL    |       |
++--------+--------------+------+-----+---------+-------+
+```
+
 ## Queries
 
 * create employee
