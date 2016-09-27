@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/graphql-go/graphql"
+	"strconv"
 )
 
 type Department struct {
@@ -48,6 +49,9 @@ var empType = graphql.NewObject(graphql.ObjectConfig{
 		"ENAME": &graphql.Field{
 			Type: graphql.String,
 		},
+		"MGR": &graphql.Field{
+			Type: graphql.String,
+		},
 		"JOB": &graphql.Field{
 			Type: graphql.String,
 		},
@@ -67,7 +71,7 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name: "RootMutation",
 	Fields: graphql.Fields{
 		/*
-		   curl -g 'http://localhost:8080/graphql?query=mutation+_{createEmp(name:"Jyoti",job:"dev",mgr:"1"){EMPNO,ENAME,JOB,SALARY,DEPT}}
+		   curl -g 'http://localhost:8080/graphql?query=mutation+_{createEmp(name:"Jyoti",job:"dev",mgr:"1",deptno:"1",sal:"100"){EMPNO,ENAME,JOB,SALARY,DEPT{DEPTNO,DNAME,LOC}}}'
 		*/
 		"createEmp": &graphql.Field{
 			Type: empType, // the return type for this field
@@ -81,6 +85,12 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 				"mgr": &graphql.ArgumentConfig{
 					Type: graphql.NewNonNull(graphql.String),
 				},
+				"sal": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"deptno": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 				fmt.Println("[in resolve]")
@@ -89,24 +99,18 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 				name, _ := params.Args["name"].(string)
 				job, _ := params.Args["job"].(string)
 				mgr, _ := params.Args["mgr"].(string)
+				deptno, _ := params.Args["deptno"].(string)
+				salary, _ := params.Args["sal"].(string)
 
-				// perform mutation operation here
-				// for e.g. create a Todo and save to DB.
-				newEmp := Employee{
-					EMPNO:  "1",
-					JOB:    job,
-					ENAME:  name,
-					MGR:    mgr,
-					SALARY: "0",
-					DEPT: Department{
-						DEPTNO: "1",
-						DNAME:  "dp",
-						LOC:    "blr",
-					},
+				dept, err := getDepartment(deptno)
+				if err != nil {
+					fmt.Println("[create] error dept", err)
+					return nil, err
 				}
 
 				// create in DB
-				createEmployee(newEmp)
+				no, err := createEmployee(name, job, salary, mgr, deptno)
+				fmt.Println("[create]", no, err)
 
 				//tmpList = append(tmpList, newEmp)
 
@@ -114,7 +118,18 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 				// Note here that
 				// - we are returning a struct instance here
 				// - we previously specified the return Type to be `empType`
-				return newEmp, nil
+				return Employee{
+					EMPNO:  strconv.FormatInt(no, 10),
+					JOB:    job,
+					ENAME:  name,
+					MGR:    mgr,
+					SALARY: salary,
+					DEPT: Department{
+						DEPTNO: dept.DEPTNO,
+						DNAME:  dept.DNAME,
+						LOC:    dept.LOC,
+					},
+				}, nil
 			},
 		},
 	},
@@ -126,7 +141,7 @@ var RootQuery = graphql.NewObject(graphql.ObjectConfig{
 	Fields: graphql.Fields{
 
 		/*
-		   curl -g 'http://localhost:8080/graphql?query={empList{EMPNO,ENAME,JOB, SALARY,DEPT}}'
+		   curl -g 'http://localhost:8080/graphql?query={empListInDept(dname:"ENGINEERING"){EMPNO,ENAME,JOB,MGR,SALARY,DEPT{DEPTNO,DNAME,LOC}}}'
 		*/
 		"empListInDept": &graphql.Field{
 			Type:        graphql.NewList(empType),
@@ -140,6 +155,19 @@ var RootQuery = graphql.NewObject(graphql.ObjectConfig{
 				dname, _ := p.Args["dname"].(string)
 				ret, err := listEmployeesInDept(dname)
 				fmt.Println("[list]", ret, err)
+				return ret, err
+			},
+		},
+
+		/*
+		   curl -g 'http://localhost:8080/graphql?query={empListAll{EMPNO,ENAME,JOB,MGR,SALARY,DEPT{DEPTNO,DNAME,LOC}}}'
+		*/
+		"empListAll": &graphql.Field{
+			Type:        graphql.NewList(empType),
+			Description: "List of employees in a Department",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				ret, err := listAllEmployees()
+				fmt.Println("[list all]", ret, err)
 				return ret, err
 			},
 		},
