@@ -102,6 +102,7 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 				deptno, _ := params.Args["deptno"].(string)
 				salary, _ := params.Args["sal"].(string)
 
+				// check if department exists
 				dept, err := getDepartment(deptno)
 				if err != nil {
 					fmt.Println("[create] error dept", err)
@@ -120,6 +121,73 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 				// - we previously specified the return Type to be `empType`
 				return Employee{
 					EMPNO:  strconv.FormatInt(no, 10),
+					JOB:    job,
+					ENAME:  name,
+					MGR:    mgr,
+					SALARY: salary,
+					DEPT: Department{
+						DEPTNO: dept.DEPTNO,
+						DNAME:  dept.DNAME,
+						LOC:    dept.LOC,
+					},
+				}, nil
+			},
+		},
+		/*
+		   curl -g 'http://localhost:8080/graphql?query=mutation+_{updateEmp(name:"Jyoti",job:"dev",mgr:"1",deptno:"1",sal:"100",empno:"1"){EMPNO,ENAME,JOB,SALARY,DEPT{DEPTNO,DNAME,LOC}}}'
+		*/
+		"updateEmp": &graphql.Field{
+			Type: empType, // the return type for this field
+			Args: graphql.FieldConfigArgument{
+				"name": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"job": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"mgr": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"sal": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"deptno": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+				"empno": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				fmt.Println("[in resolve]")
+
+				// marshall and cast the argument value
+				name, _ := params.Args["name"].(string)
+				job, _ := params.Args["job"].(string)
+				mgr, _ := params.Args["mgr"].(string)
+				deptno, _ := params.Args["deptno"].(string)
+				salary, _ := params.Args["sal"].(string)
+				empno, _ := params.Args["empno"].(string)
+
+				// check if department exists
+				dept, err := getDepartment(deptno)
+				if err != nil {
+					fmt.Println("[create] error dept", err)
+					return nil, err
+				}
+
+				// create in DB
+				err = updateEmployee(empno, name, job, salary, mgr, deptno)
+				fmt.Println("[update]", err)
+
+				//tmpList = append(tmpList, newEmp)
+
+				// return the new Emp object
+				// Note here that
+				// - we are returning a struct instance here
+				// - we previously specified the return Type to be `empType`
+				return Employee{
+					EMPNO:  empno,
 					JOB:    job,
 					ENAME:  name,
 					MGR:    mgr,

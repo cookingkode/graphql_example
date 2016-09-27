@@ -21,6 +21,7 @@ var (
 	createEmployeeStmt   *sql.Stmt
 	listAllEmployesStmt  *sql.Stmt
 	getDepartmentStmt    *sql.Stmt
+	updateEmpStmt        *sql.Stmt
 )
 
 func init() {
@@ -57,6 +58,11 @@ func init() {
 		panic(err)
 	}
 
+	if updateEmpStmt, err = db.Prepare(
+		"UPDATE EMPLOYEE SET ENAME = ?, JOB = ?, SALARY = ?, MGR = ?, DEPTNO = ?  WHERE EMPNO = ?"); err != nil {
+		panic(err)
+	}
+
 }
 
 /*
@@ -86,6 +92,11 @@ func createEmployee(name, job, salary, mgr, deptno string) (int64, error) {
 		return 0, err
 	}
 	return res.LastInsertId()
+}
+
+func updateEmployee(empno, name, job, salary, mgr, deptno string) error {
+	_, err := updateEmpStmt.Exec(name, job, salary, mgr, deptno, empno)
+	return err
 }
 
 func listAllEmployees() ([]Employee, error) {
