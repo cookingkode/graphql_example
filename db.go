@@ -22,6 +22,7 @@ var (
 	listAllEmployesStmt  *sql.Stmt
 	getDepartmentStmt    *sql.Stmt
 	updateEmpStmt        *sql.Stmt
+	delEmpStmt           *sql.Stmt
 )
 
 func init() {
@@ -63,6 +64,11 @@ func init() {
 		panic(err)
 	}
 
+	if delEmpStmt, err = db.Prepare(
+		"DELETE FROM EMPLOYEE   WHERE EMPNO = ?"); err != nil {
+		panic(err)
+	}
+
 }
 
 /*
@@ -86,7 +92,6 @@ func getDepartment(deptno string) (*Department, error) {
 }
 
 func createEmployee(name, job, salary, mgr, deptno string) (int64, error) {
-
 	res, err := createEmployeeStmt.Exec(name, job, salary, mgr, deptno)
 	if err != nil {
 		return 0, err
@@ -96,6 +101,11 @@ func createEmployee(name, job, salary, mgr, deptno string) (int64, error) {
 
 func updateEmployee(empno, name, job, salary, mgr, deptno string) error {
 	_, err := updateEmpStmt.Exec(name, job, salary, mgr, deptno, empno)
+	return err
+}
+
+func delEmployee(empno string) error {
+	_, err := delEmpStmt.Exec(empno)
 	return err
 }
 

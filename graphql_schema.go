@@ -93,8 +93,6 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 				},
 			},
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-				fmt.Println("[in resolve]")
-
 				// marshall and cast the argument value
 				name, _ := params.Args["name"].(string)
 				job, _ := params.Args["job"].(string)
@@ -131,6 +129,30 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 						LOC:    dept.LOC,
 					},
 				}, nil
+			},
+		},
+		/*
+		   curl -g 'http://localhost:8080/graphql?query=mutation+_{delEmp(empno:"3")}'
+		*/
+		"delEmp": &graphql.Field{
+			Type: graphql.String, // the return type for this field
+			Args: graphql.FieldConfigArgument{
+				"empno": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				// marshall and cast the argument value
+				empno, _ := params.Args["empno"].(string)
+
+				// delete in DB
+				err := delEmployee(empno)
+				if err != nil {
+					return "", err
+				}
+				fmt.Println("[del]", err)
+
+				return "ok", nil
 			},
 		},
 		/*
@@ -176,7 +198,7 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 					return nil, err
 				}
 
-				// create in DB
+				// update in DB
 				err = updateEmployee(empno, name, job, salary, mgr, deptno)
 				fmt.Println("[update]", err)
 
