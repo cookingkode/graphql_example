@@ -64,8 +64,6 @@ var empType = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
-var tmpList []Employee
-
 // root mutation
 var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name: "RootMutation",
@@ -110,8 +108,6 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 				// create in DB
 				no, err := createEmployee(name, job, salary, mgr, deptno)
 				fmt.Println("[create]", no, err)
-
-				//tmpList = append(tmpList, newEmp)
 
 				// return the new Emp object
 				// Note here that
@@ -201,8 +197,6 @@ var RootMutation = graphql.NewObject(graphql.ObjectConfig{
 				// update in DB
 				err = updateEmployee(empno, name, job, salary, mgr, deptno)
 				fmt.Println("[update]", err)
-
-				//tmpList = append(tmpList, newEmp)
 
 				// return the new Emp object
 				// Note here that

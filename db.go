@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 )
 
 import _ "github.com/go-sql-driver/mysql"
@@ -39,10 +38,6 @@ func dbInit(dbstring string) {
 		"SELECT EMPNO, ENAME, JOB, MGR, SALARY , D.DEPTNO, D.DNAME, D.LOC FROM EMPLOYEE E LEFT JOIN DEPARTMENT D ON E.DEPTNO = D.DEPTNO  WHERE EMPNO =?"); err != nil {
 		panic(err)
 	}
-	/*
-		if listEmployesDeptStmt, err = db.Prepare("SELECT EMPNO, ENAME, JOB, MGR, SALARY FROM EMPLOYEE WHERE DEPTNO= (SELECT DEPTNO FROM  DEPARTMENT WHERE DNAME =?)"); err != nil {
-			panic(err)
-		}*/
 
 	if listEmployesDeptStmt, err = db.Prepare(
 		"SELECT EMPNO, ENAME, JOB, MGR, SALARY , D.DEPTNO, D.DNAME, D.LOC FROM EMPLOYEE E LEFT JOIN DEPARTMENT D ON E.DEPTNO = D.DEPTNO  WHERE DNAME =?"); err != nil {
@@ -70,13 +65,6 @@ func dbInit(dbstring string) {
 	}
 
 }
-
-/*
-func createEmployee(emp Employee) error {
-	_, err := createEmployeeStmt.Exec(emp.EMPNO, emp.ENAME, emp.JOB, emp.SALARY, emp.MGR, emp.DEPT.DEPTNO)
-	return err
-}
-*/
 
 func getDepartment(deptno string) (*Department, error) {
 	var dept Department
@@ -150,7 +138,6 @@ func listAllEmployees() ([]Employee, error) {
 			&emp.DEPT.LOC); err != nil {
 			return nil, err
 		}
-		fmt.Printf(" row %v \n", emp)
 		toret = append(toret, emp)
 	}
 	if err := rows.Err(); err != nil {
@@ -183,7 +170,6 @@ func listEmployeesInDept(DNAME string) ([]Employee, error) {
 			&emp.DEPT.LOC); err != nil {
 			return nil, err
 		}
-		fmt.Printf(" row %v \n", emp)
 		toret = append(toret, emp)
 	}
 	if err := rows.Err(); err != nil {

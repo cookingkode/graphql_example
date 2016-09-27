@@ -17,10 +17,14 @@ var schema, schemaErr = graphql.NewSchema(graphql.SchemaConfig{
 var dbConnectString = flag.String("db", "root@/company", "sql db name connect string, defaults to local root")
 
 func main() {
+
+	if schemaErr != nil {
+		panic(schemaErr)
+	}
+
 	//init DB
 	dbInit(*dbConnectString)
 
-	fmt.Println("[schema error]", schemaErr)
 	http.HandleFunc("/graphql", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("[in handler]", r.URL.Query())
 		result := executeQuery(r.URL.Query()["query"][0], schema)
