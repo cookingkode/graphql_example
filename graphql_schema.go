@@ -250,6 +250,25 @@ var RootQuery = graphql.NewObject(graphql.ObjectConfig{
 		},
 
 		/*
+		   curl -g 'http://localhost:8080/graphql?query={empByNo(empno:"1"){EMPNO,ENAME,JOB,MGR,SALARY,DEPT{DEPTNO,DNAME,LOC}}}'
+		*/
+		"empByNo": &graphql.Field{
+			Type:        empType,
+			Description: "List of employees in a Department",
+			Args: graphql.FieldConfigArgument{
+				"empno": &graphql.ArgumentConfig{
+					Type: graphql.NewNonNull(graphql.String),
+				},
+			},
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				empno, _ := p.Args["empno"].(string)
+				emp, err := getEmployee(empno)
+				fmt.Println("[empByNo]", emp, err)
+				return emp, err
+			},
+		},
+
+		/*
 		   curl -g 'http://localhost:8080/graphql?query={empListAll{EMPNO,ENAME,JOB,MGR,SALARY,DEPT{DEPTNO,DNAME,LOC}}}'
 		*/
 		"empListAll": &graphql.Field{

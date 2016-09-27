@@ -2,21 +2,20 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
 import _ "github.com/go-sql-driver/mysql"
 
-const (
-	LIST_ALL_EMPS_IN_DEPT = "SELECT * FROM EMPLOYEE WHERE DEPTNO= (SELECT DEPTNO FROM  DEPARTMENT WHERE DNAME =?)"
-	LIST_ALL_EMPS         = "SELECT * FROM EMPLOYEE"
-	GET_EMPLOYEE          = "SELECT * FROM EMPLOYEE WHERE EMPNO = ?"
+var (
+	ERR_DEPT_NOT_FOUND = errors.New("Department not found")
+	ERR_EMP_NOT_FOUND  = errors.New("Employee not found")
 )
 
 var (
-	db *sql.DB
-	//getEmployee    *sql.Stmt
-	//setEmployee    *sql.Stmt
+	db                   *sql.DB
+	getEmployeeStmt      *sql.Stmt
 	listEmployesDeptStmt *sql.Stmt
 	createEmployeeStmt   *sql.Stmt
 	listAllEmployesStmt  *sql.Stmt
@@ -35,11 +34,12 @@ func init() {
 	if createEmployeeStmt, err = db.Prepare("INSERT INTO  EMPLOYEE ( ENAME, JOB, SALARY, MGR, DEPTNO) VALUES ( ?, ?, ?, ?, ?)"); err != nil {
 		panic(err)
 	}
-	/*
-			if getEmployee, err := db.Prepare("SELECT * FROM EMPLOYEE WHERE EMPNO = ?"); err != nil {
-				panic(err)
-			}
 
+	if getEmployeeStmt, err = db.Prepare(
+		"SELECT EMPNO, ENAME, JOB, MGR, SALARY , D.DEPTNO, D.DNAME, D.LOC FROM EMPLOYEE E LEFT JOIN DEPARTMENT D ON E.DEPTNO = D.DEPTNO  WHERE EMPNO =?"); err != nil {
+		panic(err)
+	}
+	/*
 		if listEmployesDeptStmt, err = db.Prepare("SELECT EMPNO, ENAME, JOB, MGR, SALARY FROM EMPLOYEE WHERE DEPTNO= (SELECT DEPTNO FROM  DEPARTMENT WHERE DNAME =?)"); err != nil {
 			panic(err)
 		}*/
@@ -85,10 +85,29 @@ func getDepartment(deptno string) (*Department, error) {
 		&dept.DEPTNO,
 		&dept.DNAME,
 		&dept.LOC); err != nil {
-		return nil, err
+		return nil, ERR_DEPT_NOT_FOUND
 	}
 
 	return &dept, nil
+}
+
+func getEmployee(empno string) (*Employee, error) {
+	var emp Employee
+
+	if err := getEmployeeStmt.QueryRow(empno).Scan(
+		&emp.EMPNO,
+		&emp.ENAME,
+		&emp.JOB,
+		&emp.MGR,
+		&emp.SALARY,
+		&emp.DEPT.DEPTNO,
+		&emp.DEPT.DNAME,
+		&emp.DEPT.LOC); err != nil {
+		return nil, ERR_EMP_NOT_FOUND
+	}
+
+	return &emp, nil
+
 }
 
 func createEmployee(name, job, salary, mgr, deptno string) (int64, error) {
